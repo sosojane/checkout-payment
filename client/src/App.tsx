@@ -5,8 +5,18 @@ import CreditCardForm, {
     CreditCardFormState
 } from "./component/CreditCardForm";
 import ProductList, { Product } from "./component/ProductList";
+import {
+    loadCheckoutWebComponents,
+    Options,
+    CheckoutWebComponents,
+    Environment,
+    ComponentName,
+    Component
+} from "@checkout.com/checkout-web-components";
 
 function App() {
+    const publicKey = "pk_sbox_kms5vhdb66lgxsgzlgv4dgy3ziy";
+
     const [products, setProducts] = useState<Product[]>([]);
 
     useEffect(() => {
@@ -50,6 +60,7 @@ function App() {
             alert("Amount must be a number");
             return;
         }
+
         const payload = {
             amount: formData.amount,
             currency: "GBP",
@@ -112,7 +123,19 @@ function App() {
             });
 
             const parsedPayload = await response.json();
-            console.log("Payment session response:", parsedPayload);
+            const options: Options = {
+                publicKey: publicKey,
+                paymentSession: parsedPayload,
+                locale: "en",
+                environment: Environment.Sandbox
+            };
+            try {
+                const checkout = await loadCheckoutWebComponents(options);
+                const flow = checkout.create(ComponentName.Flow);
+                flow.mount("#flow-container");
+            } catch (error) {
+                console.error("Failed to load CheckoutWebComponents:", error);
+            }
         } catch (error) {
             console.error("Payment session error:", error);
         }
@@ -125,6 +148,7 @@ function App() {
                 totalAmount={totalAmount}
                 onSubmit={handleSubmitCreditCardForm}
             />
+            <div id="flow-container"></div>
         </div>
     );
 }

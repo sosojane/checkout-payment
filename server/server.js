@@ -22,6 +22,7 @@ app.post("/create-payment-sessions", async (_req, res) => {
                 amount: 6540,
                 currency: "GBP",
                 reference: "ORD-123A",
+                enabled_payment_methods: ["card"],
                 description: "Payment for Guitars and Amps",
                 billing_descriptor: {
                     name: "Jia Tsang",

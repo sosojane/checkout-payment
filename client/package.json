@@ -4,6 +4,7 @@
   "private": true,
   "proxy": "http://localhost:9000",
   "dependencies": {
+    "@checkout.com/checkout-web-components": "^0.5.0-beta",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
