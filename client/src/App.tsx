@@ -43,12 +43,79 @@ function App() {
         setProducts(updatedProducts);
     };
 
-    const handleSubmitCreditCardForm = (formData: CreditCardFormState) => {
+    const handleSubmitCreditCardForm = async (
+        formData: CreditCardFormState
+    ) => {
         if (isNaN(formData.amount)) {
             alert("Amount must be a number");
             return;
         }
-        console.log("提交表单:", formData);
+        const payload = {
+            amount: formData.amount,
+            currency: "GBP",
+            reference: "ORD-123A",
+            description: "Payment for Guitars and Amps",
+            billing_descriptor: {
+                name: "Jia Tsang",
+                city: "London"
+            },
+            customer: {
+                email: "jia.tsang@example.com",
+                name: "Jia Tsang"
+            },
+            shipping: {
+                address: {
+                    address_line1: "123 High St.",
+                    address_line2: "Flat 456",
+                    city: "London",
+                    zip: "SW1A 1AA",
+                    country: "GB"
+                },
+                phone: {
+                    number: "1234567890",
+                    country_code: "+44"
+                }
+            },
+            billing: {
+                address: {
+                    address_line1: "123 High St.",
+                    address_line2: "Flat 456",
+                    city: "London",
+                    zip: "SW1A 1AA",
+                    country: "GB"
+                },
+                phone: {
+                    number: "1234567890",
+                    country_code: "+44"
+                }
+            },
+            risk: {
+                enabled: true
+            },
+            success_url: "http://localhost:3000/?status=succeeded",
+            failure_url: "http://localhost:3000/?status=failed",
+            metadata: {},
+            items: products.map((product) => ({
+                name: product.name,
+                quantity: product.quantity,
+                unit_price: product.amount
+            }))
+        };
+
+        try {
+            const response = await fetch("/create-payment-sessions", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const parsedPayload = await response.json();
+            console.log("Payment session response:", parsedPayload);
+        } catch (error) {
+            console.error("Payment session error:", error);
+        }
     };
 
     return (
