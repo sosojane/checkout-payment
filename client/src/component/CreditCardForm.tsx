@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export interface CreditCardFormState {
     cardNumber: string;
@@ -9,17 +9,22 @@ export interface CreditCardFormState {
 }
 
 interface CreditCardFormProps {
+    totalAmount: string;
     onSubmit: (formData: CreditCardFormState) => void;
 }
 
-function CreditCardForm({ onSubmit }: CreditCardFormProps) {
+function CreditCardForm({ totalAmount, onSubmit }: CreditCardFormProps) {
     const [formData, setFormData] = useState<CreditCardFormState>({
         cardNumber: "",
         cardName: "",
         expiryDate: "",
         cvv: "",
-        amount: ""
+        amount: totalAmount
     });
+
+    useEffect(() => {
+        setFormData((prevData) => ({ ...prevData, amount: totalAmount }));
+    }, [totalAmount]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
