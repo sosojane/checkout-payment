@@ -5,11 +5,11 @@ export interface CreditCardFormState {
     cardName: string;
     expiryDate: string;
     cvv: string;
-    amount: string;
+    amount: number;
 }
 
 interface CreditCardFormProps {
-    totalAmount: string;
+    totalAmount: number;
     onSubmit: (formData: CreditCardFormState) => void;
 }
 

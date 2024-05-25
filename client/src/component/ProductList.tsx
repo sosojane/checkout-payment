@@ -13,6 +13,9 @@ interface ProductListProps {
 
 function ProductList({ products, onUpdate }: ProductListProps) {
     const handleQuantityChange = (index: number, quantity: number) => {
+        if (isNaN(quantity)) {
+            quantity = 0;
+        }
         const updatedProduct = { ...products[index], quantity };
         const newProducts = [...products];
         newProducts[index] = updatedProduct;
@@ -20,7 +23,7 @@ function ProductList({ products, onUpdate }: ProductListProps) {
     };
 
     const handleAmountChange = (index: number, amount: number) => {
-        if (amount < 0) {
+        if (isNaN(amount)) {
             amount = 0;
         }
         const updatedProduct = { ...products[index], amount };

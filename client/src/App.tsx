@@ -43,7 +43,11 @@ function App() {
         setProducts(updatedProducts);
     };
 
-    const handleSubmit = (formData: CreditCardFormState) => {
+    const handleSubmitCreditCardForm = (formData: CreditCardFormState) => {
+        if (isNaN(formData.amount)) {
+            alert("Amount must be a number"); // 显示警示对话框
+            return;
+        }
         console.log("提交表单:", formData);
     };
 
@@ -51,8 +55,8 @@ function App() {
         <div>
             <ProductList products={products} onUpdate={handleProductUpdate} />
             <CreditCardForm
-                totalAmount={totalAmount.toString()}
-                onSubmit={handleSubmit}
+                totalAmount={totalAmount}
+                onSubmit={handleSubmitCreditCardForm}
             />
         </div>
     );
