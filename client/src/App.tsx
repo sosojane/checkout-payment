@@ -1,34 +1,18 @@
 import React, { useEffect, useState } from "react";
 import logo from "./logo.svg";
 import "./App.css";
-
-interface PaymentData {
-    payments: string[];
-}
+import CreditCardForm, {
+    CreditCardFormState
+} from "./component/CreditCardForm";
 
 function App() {
-    const [paymentData, setPaymentData] = useState<PaymentData>({
-        payments: []
-    });
+    const handleSubmit = (formData: CreditCardFormState) => {
+        console.log("提交表单:", formData);
+    };
 
-    useEffect(() => {
-        fetch("/api")
-            .then((response) => response.json())
-            .then((data: PaymentData) => {
-                setPaymentData(data);
-            });
-    }, []);
     return (
         <div>
-            {paymentData.payments && paymentData.payments.length > 0 ? (
-                <ul>
-                    {paymentData.payments.map((payment) => (
-                        <li key={payment}>{payment}</li>
-                    ))}
-                </ul>
-            ) : (
-                <p>No payments available.</p>
-            )}
+            <CreditCardForm onSubmit={handleSubmit} />
         </div>
     );
 }
