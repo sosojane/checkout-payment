@@ -20,10 +20,11 @@ app.post("/create-payment-sessions", async (_req, res) => {
             },
             body: JSON.stringify({
                 amount: 6540,
-                currency: "GBP",
+                currency: "EUR",
                 reference: "ORD-123A",
-                enabled_payment_methods: ["card"],
                 description: "Payment for Guitars and Amps",
+                enabled_payment_methods: ["card", "ideal"],
+                processing_channel_id: "pc_2vhgz2ikd6hele43rwcgvwuqju",
                 billing_descriptor: {
                     name: "Jia Tsang",
                     city: "London"
@@ -51,7 +52,7 @@ app.post("/create-payment-sessions", async (_req, res) => {
                         address_line2: "Flat 456",
                         city: "London",
                         zip: "SW1A 1AA",
-                        country: "GB"
+                        country: "NL"
                     },
                     phone: {
                         number: "1234567890",

@@ -37,7 +37,7 @@ function ProductList({ products, onUpdate }: ProductListProps) {
             style={{
                 display: "flex",
                 alignItems: "center",
-                marginLeft: "10vh",
+                justifyContent: "center",
                 marginTop: "10vh"
             }}
         >
