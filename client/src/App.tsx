@@ -45,7 +45,7 @@ function App() {
 
     const handleSubmitCreditCardForm = (formData: CreditCardFormState) => {
         if (isNaN(formData.amount)) {
-            alert("Amount must be a number"); // 显示警示对话框
+            alert("Amount must be a number");
             return;
         }
         console.log("提交表单:", formData);
