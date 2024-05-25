@@ -8,13 +8,37 @@ import ProductList, { Product } from "./component/ProductList";
 import {
     loadCheckoutWebComponents,
     Options,
-    CheckoutWebComponents,
     Environment,
-    ComponentName,
-    Component
+    ComponentName
 } from "@checkout.com/checkout-web-components";
+import { Frames, FramesStyle, CardFrame } from "frames-react";
 
 function App() {
+    const framesStyle: FramesStyle = {
+        valid: {
+            color: "green"
+        },
+        invalid: {
+            color: "red"
+        },
+        focus: {
+            color: "gray"
+        },
+        placeholder: {
+            base: {
+                color: "gray"
+            },
+            valid: {
+                color: "gray"
+            },
+            invalid: {
+                color: "gray"
+            },
+            focus: {
+                color: "gray"
+            }
+        }
+    };
     const publicKey = "pk_sbox_kms5vhdb66lgxsgzlgv4dgy3ziy";
 
     const [products, setProducts] = useState<Product[]>([]);
@@ -143,6 +167,24 @@ function App() {
 
     return (
         <div>
+            <Frames
+                config={{
+                    debug: true,
+                    publicKey: "pk_sbox_kms5vhdb66lgxsgzlgv4dgy3ziy",
+                    style: framesStyle,
+                    localization: "EN-GB"
+                }}
+            >
+                <CardFrame />
+                <button
+                    onClick={() => {
+                        Frames.submitCard().then((card) => alert(card.token));
+                    }}
+                >
+                    支付 EU {totalAmount}
+                </button>
+            </Frames>
+
             <ProductList products={products} onUpdate={handleProductUpdate} />
             <CreditCardForm
                 totalAmount={totalAmount}
