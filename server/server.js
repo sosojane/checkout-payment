@@ -5,8 +5,10 @@ const app = express();
 app.use(express.static("public"));
 app.use(express.json());
 
-// Insert your secret key here
-const SECRET_KEY = "sk_sbox_txpyg4zdo4pvb42jiag4dp4qcye";
+// Use SAND_BOX_SECRET_KEY to support ideal payment
+// Use PERSONAL_SECRET_KEY to register webhook
+const SAND_BOX_SECRET_KEY = "sk_sbox_txpyg4zdo4pvb42jiag4dp4qcye";
+const PERSONAL_BOX_SECRET_KEY = "sk_sbox_nte55jr6fkd3v56jtr4ow6dioae";
 
 app.post("/create-payment-sessions", async (_req, res) => {
     // Create a PaymentSession
@@ -15,7 +17,7 @@ app.post("/create-payment-sessions", async (_req, res) => {
         {
             method: "POST",
             headers: {
-                Authorization: `Bearer ${SECRET_KEY}`,
+                Authorization: `Bearer ${SAND_BOX_SECRET_KEY}`,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
@@ -94,7 +96,7 @@ app.post("/payments", async (_req, res) => {
     const request = await fetch("https://api.sandbox.checkout.com/payments", {
         method: "POST",
         headers: {
-            Authorization: `Bearer ${SECRET_KEY}`,
+            Authorization: `Bearer ${PERSONAL_BOX_SECRET_KEY}`,
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
@@ -118,7 +120,7 @@ app.post("/payments", async (_req, res) => {
             capture: true,
             capture_on: "2019-09-10T10:11:12Z",
             customer: {
-                id: "cus_sjkbcw4gbjcezcezofvbllsbjy",
+                id: "cus_vdioi7sjnjwefndq7o6kqszezu",
                 email: "johnsmith@example.com",
                 name: "John Smith",
                 phone: {
@@ -153,6 +155,7 @@ app.post("/payments", async (_req, res) => {
                 xid: "MDAwMDAwMDAwMDAwMDAwMzIyNzY=",
                 version: "2.0.1"
             },
+            processing_channel_id: "pc_7bwqutuwqczulbdcnntq3ymsfu",
             previous_payment_id: "pay_fun26akvvjjerahhctaq2uzhu4",
             risk: {
                 enabled: false

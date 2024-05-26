@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
-import logo from "./logo.svg";
 import "./App.css";
-import { CreditCardFormState } from "./component/CreditCardForm";
 import ProductList, { Product } from "./component/ProductList";
 import {
     loadCheckoutWebComponents,
@@ -37,7 +35,10 @@ function App() {
             }
         }
     };
-    const publicKey = "pk_sbox_kms5vhdb66lgxsgzlgv4dgy3ziy";
+    // sandBoxPublic key for Flow
+    // personalPublic key for Frame
+    const sandBoxPublicKey = "pk_sbox_ycp2pqsjd7i7q2ul7q5v5lzvniw";
+    const personalPublicKey = "pk_sbox_ycp2pqsjd7i7q2ul7q5v5lzvniw";
 
     // Handle payment language
     type PaymentLanguage = "EN" | "NL";
@@ -129,7 +130,7 @@ function App() {
     const handleRetryPayment = async () => {
         Frames.init({
             debug: false,
-            publicKey: publicKey,
+            publicKey: personalPublicKey,
             style: framesStyle,
             localization: convertToFramesLanguages(framePaymentState.language)
         });
@@ -147,6 +148,7 @@ function App() {
                 status: FramePaymentStatus.Processing
             }));
             const cardData = await Frames.submitCard();
+            console.log(cardData);
             const paymentsPayload = {
                 amount: totalAmount,
                 token: cardData.token
@@ -158,7 +160,6 @@ function App() {
                 },
                 body: JSON.stringify(paymentsPayload)
             });
-
             const parsedPayload = await response.json();
             console.log(parsedPayload);
             setFramePaymentState((prevState) => ({
@@ -180,7 +181,7 @@ function App() {
     const handleChangeEN = async () => {
         Frames.init({
             debug: false,
-            publicKey: publicKey,
+            publicKey: personalPublicKey,
             style: framesStyle,
             localization: convertToFramesLanguages("EN")
         });
@@ -197,7 +198,7 @@ function App() {
     const handleChangeNL = async () => {
         Frames.init({
             debug: false,
-            publicKey: publicKey,
+            publicKey: personalPublicKey,
             style: framesStyle,
             localization: convertToFramesLanguages("NL")
         });
@@ -279,7 +280,7 @@ function App() {
 
             const parsedPayload = await response.json();
             const options: Options = {
-                publicKey: publicKey,
+                publicKey: sandBoxPublicKey,
                 paymentSession: parsedPayload,
                 locale: convertToFlowLanguages(flowPaymentState.language),
                 environment: Environment.Sandbox
@@ -403,7 +404,7 @@ function App() {
                 <Frames
                     config={{
                         debug: false,
-                        publicKey: publicKey,
+                        publicKey: personalPublicKey,
                         style: framesStyle,
                         localization: convertToFramesLanguages(
                             framePaymentState.language
