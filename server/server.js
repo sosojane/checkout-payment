@@ -23,7 +23,7 @@ app.post("/create-payment-sessions", async (_req, res) => {
                 currency: "EUR",
                 reference: "ORD-123A",
                 description: "Payment for Guitars and Amps",
-                enabled_payment_methods: ["card", "ideal"],
+                enabled_payment_methods: ["ideal"],
                 processing_channel_id: "pc_2vhgz2ikd6hele43rwcgvwuqju",
                 billing_descriptor: {
                     name: "Jia Tsang",
@@ -80,6 +80,103 @@ app.post("/create-payment-sessions", async (_req, res) => {
             })
         }
     );
+
+    const parsedPayload = await request.json();
+
+    res.status(request.status).send(parsedPayload);
+});
+
+app.post("/payments", async (_req, res) => {
+    // Create a Payment
+    const parsedReqBody = _req.body;
+    const token = parsedReqBody.token;
+    const amount = parsedReqBody.amount;
+    const request = await fetch("https://api.sandbox.checkout.com/payments", {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${SECRET_KEY}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            source: {
+                type: "token",
+                token: token,
+                billing_address: {
+                    address_line1: "123 High St.",
+                    address_line2: "Flat 456",
+                    city: "London",
+                    state: "GB",
+                    zip: "SW1A 1AA",
+                    country: "GB"
+                }
+            },
+            amount: amount,
+            currency: "USD",
+            payment_type: "Regular",
+            reference: "ORD-5023-4E89",
+            description: "Set of 3 masks",
+            capture: true,
+            capture_on: "2019-09-10T10:11:12Z",
+            customer: {
+                id: "cus_sjkbcw4gbjcezcezofvbllsbjy",
+                email: "johnsmith@example.com",
+                name: "John Smith",
+                phone: {
+                    country_code: "+1",
+                    number: "415 555 2671"
+                }
+            },
+            billing_descriptor: {
+                name: "Withdrawal",
+                city: "London"
+            },
+            shipping: {
+                address: {
+                    address_line1: "Checkout.com",
+                    address_line2: "Flat 456",
+                    city: "London",
+                    state: "GB",
+                    zip: "SW1A 1AA",
+                    country: "GB"
+                },
+                phone: {
+                    country_code: "+1",
+                    number: "415 555 2671"
+                }
+            },
+            merchant_initiated: true,
+            "3ds": {
+                enabled: true,
+                attempt_n3d: true,
+                eci: "05",
+                cryptogram: "AgAAAAAAAIR8CQrXcIhbQAAAAAA=",
+                xid: "MDAwMDAwMDAwMDAwMDAwMzIyNzY=",
+                version: "2.0.1"
+            },
+            previous_payment_id: "pay_fun26akvvjjerahhctaq2uzhu4",
+            risk: {
+                enabled: false
+            },
+            success_url: "https://example.com/payments/success",
+            failure_url: "https://example.com/payments/fail",
+            payment_ip: "90.197.169.245",
+            recipient: {
+                dob: "1985-05-15",
+                account_number: "5555554444",
+                zip: "SW1A",
+                last_name: "Jones"
+            },
+            metadata: {
+                coupon_code: "NY2018",
+                partner_id: 123989
+            },
+            segment: {
+                brand: "Acme Corporation",
+                business_category: "Inward Payment",
+                market: "UK"
+            }
+        })
+    });
 
     const parsedPayload = await request.json();
 

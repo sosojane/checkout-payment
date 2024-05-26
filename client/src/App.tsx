@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import logo from "./logo.svg";
 import "./App.css";
-import CreditCardForm, {
-    CreditCardFormState
-} from "./component/CreditCardForm";
+import { CreditCardFormState } from "./component/CreditCardForm";
 import ProductList, { Product } from "./component/ProductList";
 import {
     loadCheckoutWebComponents,
@@ -11,7 +9,7 @@ import {
     Environment,
     ComponentName
 } from "@checkout.com/checkout-web-components";
-import { Frames, FramesStyle, CardFrame } from "frames-react";
+import { Frames, FramesStyle, CardFrame, FramesLanguages } from "frames-react";
 
 function App() {
     const framesStyle: FramesStyle = {
@@ -41,6 +39,57 @@ function App() {
     };
     const publicKey = "pk_sbox_kms5vhdb66lgxsgzlgv4dgy3ziy";
 
+    // Handle payment language
+    type PaymentLanguage = "EN" | "NL";
+    function convertToFramesLanguages(
+        paymentLanguage: PaymentLanguage
+    ): FramesLanguages {
+        if (paymentLanguage === "NL") {
+            return "NL-NL";
+        } else {
+            return "EN-GB";
+        }
+    }
+    function convertToFlowLanguages(
+        paymentLanguage: PaymentLanguage
+    ): FlowPaymentLanguage {
+        if (paymentLanguage === "NL") {
+            return "nl";
+        } else {
+            return "en";
+        }
+    }
+
+    // Handle frame payment integration
+    const FramePaymentStatus = {
+        Pending: "Pending",
+        Processing: "Processing"
+    };
+    interface FramePaymentState {
+        language: PaymentLanguage;
+        status: string;
+        approved: boolean;
+    }
+    const [framePaymentState, setFramePaymentState] =
+        useState<FramePaymentState>({
+            language: "EN",
+            status: FramePaymentStatus.Pending,
+            approved: false
+        });
+
+    // Handle flow payment integration
+    type FlowPaymentMountStatus = "UnMounted" | "Processing" | "Mounted";
+    type FlowPaymentLanguage = "en" | "nl";
+    interface FlowPaymentState {
+        language: PaymentLanguage;
+        mountStatus: FlowPaymentMountStatus;
+    }
+    const [flowPaymentState, setFlowPaymentState] = useState<FlowPaymentState>({
+        language: "EN",
+        mountStatus: "UnMounted"
+    });
+
+    // Handle fetch product
     const [products, setProducts] = useState<Product[]>([]);
 
     useEffect(() => {
@@ -48,7 +97,6 @@ function App() {
             const fetchedProducts = await fetchProducts();
             setProducts(fetchedProducts);
         };
-
         loadProducts();
     }, []);
 
@@ -77,16 +125,99 @@ function App() {
         setProducts(updatedProducts);
     };
 
-    const handleSubmitCreditCardForm = async (
-        formData: CreditCardFormState
-    ) => {
-        if (isNaN(formData.amount)) {
-            alert("Amount must be a number");
-            return;
-        }
+    // Handle user input/interaction
+    const handleRetryPayment = async () => {
+        Frames.init({
+            debug: false,
+            publicKey: publicKey,
+            style: framesStyle,
+            localization: convertToFramesLanguages(framePaymentState.language)
+        });
+        setFramePaymentState((prevState) => ({
+            ...prevState,
+            status: FramePaymentStatus.Pending,
+            approved: false
+        }));
+    };
 
+    const handleFramePayment = async () => {
+        try {
+            setFramePaymentState((prevState) => ({
+                ...prevState,
+                status: FramePaymentStatus.Processing
+            }));
+            const cardData = await Frames.submitCard();
+            const paymentsPayload = {
+                amount: totalAmount,
+                token: cardData.token
+            };
+            const response = await fetch("/payments", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(paymentsPayload)
+            });
+
+            const parsedPayload = await response.json();
+            console.log(parsedPayload);
+            setFramePaymentState((prevState) => ({
+                ...prevState,
+                status: parsedPayload.status,
+                approved: parsedPayload.approved
+            }));
+        } catch (error) {
+            console.error("Payment session error:", error);
+            setFramePaymentState((prevState) => ({
+                ...prevState,
+                status: FramePaymentStatus.Pending,
+                approved: false
+            }));
+        }
+    };
+
+    // Handle change of languages
+    const handleChangeEN = async () => {
+        Frames.init({
+            debug: false,
+            publicKey: publicKey,
+            style: framesStyle,
+            localization: convertToFramesLanguages("EN")
+        });
+        setFramePaymentState((prevState) => ({
+            ...prevState,
+            language: "EN"
+        }));
+        setFlowPaymentState((prevState) => ({
+            ...prevState,
+            language: "EN"
+        }));
+    };
+
+    const handleChangeNL = async () => {
+        Frames.init({
+            debug: false,
+            publicKey: publicKey,
+            style: framesStyle,
+            localization: convertToFramesLanguages("NL")
+        });
+        setFramePaymentState((prevState) => ({
+            ...prevState,
+            language: "NL"
+        }));
+        setFlowPaymentState((prevState) => ({
+            ...prevState,
+            language: "NL"
+        }));
+    };
+
+    const handleFlowPayment = async () => {
+        setFlowPaymentState((prevState) => ({
+            ...prevState,
+            mountStatus: "Processing"
+        }));
         const payload = {
-            amount: formData.amount,
+            amount: totalAmount,
             currency: "GBP",
             reference: "ORD-123A",
             description: "Payment for Guitars and Amps",
@@ -150,47 +281,178 @@ function App() {
             const options: Options = {
                 publicKey: publicKey,
                 paymentSession: parsedPayload,
-                locale: "en",
+                locale: convertToFlowLanguages(flowPaymentState.language),
                 environment: Environment.Sandbox
             };
-            try {
-                const checkout = await loadCheckoutWebComponents(options);
-                const flow = checkout.create(ComponentName.Flow);
-                flow.mount("#flow-container");
-            } catch (error) {
-                console.error("Failed to load CheckoutWebComponents:", error);
-            }
+            const checkout = await loadCheckoutWebComponents(options);
+            const flow = checkout.create(ComponentName.Flow);
+            flow.mount("#flow-container");
+            setFlowPaymentState((prevState) => ({
+                ...prevState,
+                mountStatus: "Mounted"
+            }));
         } catch (error) {
+            setFlowPaymentState((prevState) => ({
+                ...prevState,
+                mountStatus: "UnMounted"
+            }));
             console.error("Payment session error:", error);
         }
     };
 
-    return (
-        <div>
-            <Frames
-                config={{
-                    debug: true,
-                    publicKey: "pk_sbox_kms5vhdb66lgxsgzlgv4dgy3ziy",
-                    style: framesStyle,
-                    localization: "EN-GB"
+    let buttonComponent: JSX.Element;
+    if (framePaymentState.status === FramePaymentStatus.Pending) {
+        buttonComponent = (
+            <button
+                onClick={handleFramePayment}
+                style={{
+                    background: "lightgray",
+                    border: "1px solid darkgray",
+                    padding: "10px",
+                    width: "100%",
+                    borderRadius: "4px"
                 }}
             >
-                <CardFrame />
+                Pay Now. EU {totalAmount}
+            </button>
+        );
+    } else if (framePaymentState.status === FramePaymentStatus.Processing) {
+        buttonComponent = (
+            <button
+                onClick={handleFramePayment}
+                disabled={true}
+                style={{
+                    background: "lightgray",
+                    border: "1px solid darkgray",
+                    padding: "10px",
+                    width: "100%",
+                    borderRadius: "4px"
+                }}
+            >
+                Pay Now. EU {totalAmount}
+            </button>
+        );
+    } else {
+        if (framePaymentState.approved) {
+            buttonComponent = (
                 <button
-                    onClick={() => {
-                        Frames.submitCard().then((card) => alert(card.token));
+                    onClick={handleRetryPayment}
+                    style={{
+                        background: "lightgreen",
+                        border: "1px solid green",
+                        padding: "10px",
+                        width: "100%",
+                        borderRadius: "4px"
                     }}
                 >
-                    支付 EU {totalAmount}
+                    Payment {framePaymentState.status}! Try again payment.
                 </button>
-            </Frames>
+            );
+        } else {
+            buttonComponent = (
+                <button
+                    onClick={handleRetryPayment}
+                    style={{
+                        background: "lightcoral",
+                        border: "1px solid coral",
+                        padding: "10px",
+                        width: "100%",
+                        borderRadius: "4px"
+                    }}
+                >
+                    Payment {framePaymentState.status}! Try again payment.
+                </button>
+            );
+        }
+    }
 
+    return (
+        <div>
             <ProductList products={products} onUpdate={handleProductUpdate} />
-            <CreditCardForm
-                totalAmount={totalAmount}
-                onSubmit={handleSubmitCreditCardForm}
-            />
-            <div id="flow-container"></div>
+            <div style={{ display: "flex", marginBottom: "10px" }}>
+                <span
+                    onClick={
+                        framePaymentState.status ===
+                            FramePaymentStatus.Processing ||
+                        flowPaymentState.mountStatus === "Processing"
+                            ? undefined
+                            : handleChangeEN
+                    }
+                    style={{ textDecoration: "underline", cursor: "pointer" }}
+                >
+                    EN
+                </span>
+                <label style={{ paddingLeft: "5px", paddingRight: "5px" }}>
+                    /
+                </label>
+
+                <span
+                    onClick={
+                        framePaymentState.status ===
+                            FramePaymentStatus.Processing ||
+                        flowPaymentState.mountStatus === "Processing"
+                            ? undefined
+                            : handleChangeNL
+                    }
+                    style={{ textDecoration: "underline", cursor: "pointer" }}
+                >
+                    NL
+                </span>
+            </div>
+            <div>
+                <Frames
+                    config={{
+                        debug: false,
+                        publicKey: publicKey,
+                        style: framesStyle,
+                        localization: convertToFramesLanguages(
+                            framePaymentState.language
+                        )
+                    }}
+                >
+                    <CardFrame />
+                    {buttonComponent}
+                </Frames>
+            </div>
+            <div>
+                <div
+                    id="flow-container"
+                    style={
+                        flowPaymentState.mountStatus === "Mounted"
+                            ? { marginTop: "8px" }
+                            : {}
+                    }
+                />
+                {flowPaymentState.mountStatus === "UnMounted" && (
+                    <button
+                        onClick={handleFlowPayment}
+                        style={{
+                            background: "lightgray",
+                            border: "1px solid darkgray",
+                            padding: "10px",
+                            width: "100%",
+                            borderRadius: "4px"
+                        }}
+                    >
+                        Pay by iDEAL. EU {totalAmount}
+                    </button>
+                )}
+                {flowPaymentState.mountStatus === "Processing" && (
+                    <button
+                        onClick={handleFlowPayment}
+                        style={{
+                            background: "lightgray",
+                            border: "1px solid darkgray",
+                            padding: "10px",
+                            width: "100%",
+                            borderRadius: "4px"
+                        }}
+                        disabled={true}
+                    >
+                        Pay by iDEAL. EU {totalAmount}, Loading...
+                    </button>
+                )}
+            </div>
         </div>
     );
 }
