@@ -72,7 +72,7 @@ app.post("/create-payment-sessions", async (_req, res) => {
                 success_url: "http://localhost:3000/?status=succeeded",
                 failure_url: "http://localhost:3000/?status=failed",
                 metadata: {},
-                items: items,
+                items: items
             })
         }
     );
@@ -179,7 +179,7 @@ app.post("/payments/token", async (_req, res) => {
     });
 
     const parsedPayload = await response.json();
-    if (response.ok) {
+    if (response.ok && storeForFutureUse) {
         userPaymentInstrumentMap.set(userId, {
             id: parsedPayload.source.id,
             scheme: parsedPayload.source.scheme,
@@ -297,7 +297,7 @@ app.get("/user/:userId/instrument", (req, res) => {
 });
 
 app.delete("/user/:userId/instrument", (req, res) => {
-    userPaymentInstrumentMap.delete(req.params.id);
+    userPaymentInstrumentMap.delete(req.params.userId);
     res.send();
 });
 
